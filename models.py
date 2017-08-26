@@ -30,12 +30,6 @@ class Player(DeclarativeBase):
         self.levelId = levelId
         self.picture = picture
 
-    def __repr__(self):
-        return self.name
-
-    def __str__(self):
-        return "User(id='%s')" % self.id
-
 
 
 class Level(DeclarativeBase):
@@ -45,8 +39,8 @@ class Level(DeclarativeBase):
     levelNo = Column(Integer)
     nextUrl = Column(String(150))
     picture = Column(String(150))
-    html = Column(String)
-    js = Column(String)
+    html = Column(String(200))
+    js = Column(String(200))
     hint = Column(String(150))
     ans = Column(String(150))
     

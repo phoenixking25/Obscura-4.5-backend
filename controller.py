@@ -3,10 +3,6 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from models import  DeclarativeBase
 import config
 
-
-
-
-
 class DatabaseHandler:
     def __init__(self):
         pass
