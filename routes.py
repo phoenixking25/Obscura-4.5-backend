@@ -20,7 +20,7 @@ def initial():
 @obscura.route('/player/', methods = ['GET'])
 def leaderboard():   
     if request.headers['auth']:             
-        info = Player.query.all()
+        info = Player.query.order_by(Player.levelId.desc()).all()
         if info:
             array = []
             print info
@@ -36,10 +36,17 @@ def leaderboard():
 def signup():
     if request.method == 'POST':
         info = Player(request.data['name'], request.data['email'], request.data['username'], request.data['college'], request.data['phone'], request.data['level'], request.data['levelId'], request.data['picture'])
-        session.add(info)
-        session.commit()
-        jwt = tokenGenerate(request.data['email'])
-        return {'status': 'created', 'token': jwt}, 201
+        casea = Player.query.filter(Player.email == request.data['email']).first()
+        caseb = Player.query.filter(Player.username == request.data['username']).first()
+        if casea:
+            return {'status': 'email already exist', 'token': None}, 200
+        elif caseb:
+            return {'status': 'username already exist', 'token': None}, 200
+        else:
+            session.add(info)
+            session.commit()
+            jwt = tokenGenerate(request.data['email'])
+            return {'status': 'created', 'token': jwt}, 201
     return {"status":"enter Player details"}
 
 
@@ -49,9 +56,9 @@ def getAlias():
     user = Player.query.filter(Player.email == info['email']).first()
     level = Level.query.filter(Level.levelNo == user.levelId).first()
     if not level:
-        return {'status':'Level not found'}, 404
+        return {'status':'Level not found', 'alias': ''}, 200
     if user.levelId >= level.levelNo:
-        return {'alias': level.name}, 200
+        return {'status': 'success', 'alias': level.name}, 200
     else:
         return {'status': 'Not Accessible for the player'}
 
@@ -68,36 +75,6 @@ def getLevel(alias):
     else:
         return {'status': 'Player not allowed'}, 403
 
-
-@obscura.route('/getAns/<alias>', methods = ['GET', 'POST'])
-def getAns(alias):
-    if request.method == 'POST':
-        info = decoder()
-        user = Player.query.filter(Player.email == info['email']).first()   
-        level = Level.query.filter(Level.name == alias).first()
-        if user.levelId == level.levelNo:
-            ans = request.data['ans']
-            level = Level.query.filter(Level.name == alias).first()
-            if level.ans == ans:
-                print "Saving"
-                Player.save()
-                session.query(Player).filter(Player.email == info['email']).update({'levelId': user.levelId + 1})
-                session.commit()
-                print "Saved"
-                nextlevel = Level.query.filter(Level.levelNo == level.levelNo + 1)
-                return {'status': 'success', 'nextalias': nextlevel.name}, 200
-            else:
-                return {'status': 'failure'}, 200
-        elif user.levelId > level.levelNo:
-            ans = request.data['ans']
-            if level.ans == ans:
-                nextlevel = Level.query.filter(Level.levelNo == level.levelNo + 1)
-                return {'status': 'success', 'nextalias': nextlevel.name}, 200
-            else:
-                return {'status': 'failure'}, 404
-        else:
-            return {'status': 'not accessible'}, 404
-    return {'status': 'post the ans'}, 200
             
 
 @obscura.route('/getToken/', methods = ['POST','GET'])
@@ -110,9 +87,9 @@ def getToken():
         if user:
             if info['email'] == user.email:
                 jwt = tokenGenerate(info['email'])
-                return {'backend':info['email'], 'token':jwt, 'status':'success'}
+                return {'backend':info['email'], 'token':jwt, 'status':'success', 'provider':provider}
         else:
-            return {'backend':info['email'], 'status':'failure', 'name':info['name'], 'picture':info['picture'],  }
+            return {'backend':info['email'], 'status':'failure', 'name':info['name'], 'picture':info['picture'], 'provider': provider }
     return {'error':'token not recieved'}
 
 @obscura.route('/crreateLevel/', methods = ['POST', 'GET', 'PATCH'])
@@ -123,3 +100,32 @@ def createLevel():
         session.commit()
         return {'status':'created'}, 201
     return {'status':'enter level details'}, 200
+
+@obscura.route('/getAns/<alias>', methods = ['GET', 'POST'])
+def getans(alias):
+    if request.method == 'POST':
+        info = decoder()
+        user = Player.query.filter(Player.email == info['email']).first()
+        level = Level.query.filter(Level.name == alias).first()
+        if user.levelId == level.levelNo:
+            ans = request.data['ans']
+            if ans == level.ans:
+                session.query(Player).filter(Player.email == info['email']).update({'levelId': user.levelId + 1})
+                session.commit()
+                user = Player.query.filter(Player.email == info['email']).first()
+                level = Level.query.filter(Level.levelNo == user.levelId).first()
+                return {'status': 'success', 'nextalias': level.name}, 200
+            else:
+                return {'status': 'wrong answer', 'nextalias': None}, 200
+        elif user.levelId > level.levelNo:
+            ans = request.data['ans']
+            if ans == level.ans:
+                user = Player.query.filter(Player.email == info['email']).first()
+                nextlevelno = level.levelNo + 1
+                level = Level.query.filter(Level.levelNo == nextlevelno).first()
+                return {'status': 'success', 'nextalias': level.name}, 200
+            else:
+                return {'status': 'wrong answer', 'nextalias': None}, 200
+        else:
+            return {'status': 'not accessible', 'nextalias': None}, 403
+    

@@ -30,6 +30,8 @@ class Player(DeclarativeBase):
         self.levelId = levelId
         self.picture = picture
 
+    def __repr__(self):
+        return self.username
 
 
 class Level(DeclarativeBase):
