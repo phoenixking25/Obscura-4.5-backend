@@ -113,7 +113,8 @@ def getans(alias):
                 session.query(Player).filter(Player.email == info['email']).update({'levelId': user.levelId + 1})
                 session.commit()
                 user = Player.query.filter(Player.email == info['email']).first()
-                level = Level.query.filter(Level.levelNo == user.levelId).first()
+                nextLevel = user.levelId + 1
+                level = Level.query.filter(Level.levelNo == nextLevel).first()
                 return {'status': 'success', 'nextalias': level.name}, 200
             else:
                 return {'status': 'wrong answer', 'nextalias': None}, 200
