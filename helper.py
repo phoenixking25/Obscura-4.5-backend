@@ -2,6 +2,7 @@ import json
 from httplib2 import Http
 from flask import request
 import jwt
+import config as config
 
 def validate_token(access_token, provider):
     h = Http()
@@ -33,10 +34,10 @@ def validate_token(access_token, provider):
         return data
 
 def tokenGenerate(email):        
-    encoded = jwt.encode({'email': email}, 'secret', algorithm='HS256')
+    encoded = jwt.encode({'email': email}, config.JWT_SECRET, algorithm='HS256')
     return encoded
 
 def decoder():
     token = request.headers['auth']
-    ans = jwt.decode(token, 'secret', algorithms=['HS256'])        
+    ans = jwt.decode(token, config.JWT_SECRET, algorithms=['HS256'])        
     return ans
