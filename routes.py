@@ -8,7 +8,7 @@ database_handler = DatabaseHandler()
 session = database_handler.connect_to_database()
 
 
-# @obscura.route('/player/', methods = ['GET'])
+
 @obscura.route('/leaderboard/', methods = ['GET'])
 def leaderboard():
     '''
@@ -27,7 +27,7 @@ def leaderboard():
     else:
         return {'status': 'invalid access'}, 401
 
-@obscura.route('/signup', methods = ['GET', 'POST','PUT'])
+@obscura.route('/signup', methods = ['POST','PUT'])
 def signup():
     '''
     Create a new user
@@ -48,8 +48,8 @@ def signup():
     return {'status':'enter Player details'}
 
 
-@obscura.route('/level/', methods = ['GET', 'POST'])
-def getalias():
+@obscura.route('/level/', methods = ['GET'])
+def getAlias():
     '''
     Return the alias of the level that is going to display in url
     '''
@@ -66,8 +66,9 @@ def getalias():
     else:
         return {'status': 'invalid access'}, 401
 
-@obscura.route('/getlevel/<alias>', methods = ['GET', 'POST'])
-def getlevel(alias):
+
+@obscura.route('/level/<alias>', methods = ['GET', 'POST'])
+def level(alias):
     '''
     get the alias from the url and return the level respectively
     '''
@@ -84,6 +85,37 @@ def getlevel(alias):
             return {'status': 'Player not allowed'}, 403
     else:
         return {'status': 'invalid access'}, 401
+    
+    if request.method == 'POST':
+        info = decoder()
+        if info:
+            user = Player.query.filter(Player.email == info['email']).first()
+            level = Level.query.filter(Level.name == alias).first()
+            if user.levelId == level.levelNo:
+                ans = request.data['ans']
+                if ans == level.ans:
+                    session.query(Player).filter(Player.email == info['email']).update({'levelId': user.levelId + 1})
+                    session.commit()
+                    user = Player.query.filter(Player.email == info['email']).first()
+                    nextLevel = user.levelId + 1
+                    level = Level.query.filter(Level.levelNo == nextLevel).first()
+                    return {'status': 'success', 'nextalias': level.name}, 200
+                else:
+                    return {'status': 'wrong answer', 'nextalias': None}, 400
+            elif user.levelId > level.levelNo:
+                ans = request.data['ans']
+                if ans == level.ans:
+                    user = Player.query.filter(Player.email == info['email']).first()
+                    nextlevelno = level.levelNo + 1
+                    level = Level.query.filter(Level.levelNo == nextlevelno).first()
+                    return {'status': 'success', 'nextalias': level.name}, 200
+                else:
+                    return {'status': 'wrong answer', 'nextalias': None}, 400
+            else:
+                return {'status': 'not accessible', 'nextalias': None}, 401
+        else:
+            return {'status': 'invalid access'}, 401
+
             
 
 @obscura.route('/getToken/', methods = ['POST','GET'])
@@ -116,37 +148,3 @@ def createLevel():
         return {'status':'created'}, 201
     return {'status':'enter level details'}, 200
 
-@obscura.route('/getAns/<alias>', methods = ['GET', 'POST'])
-def postans(alias):
-    '''
-    endpoint of the api that return the response when there is a ans post on the level
-    '''
-    if request.method == 'POST':
-        info = decoder()
-        if info:
-            user = Player.query.filter(Player.email == info['email']).first()
-            level = Level.query.filter(Level.name == alias).first()
-            if user.levelId == level.levelNo:
-                ans = request.data['ans']
-                if ans == level.ans:
-                    session.query(Player).filter(Player.email == info['email']).update({'levelId': user.levelId + 1})
-                    session.commit()
-                    user = Player.query.filter(Player.email == info['email']).first()
-                    nextLevel = user.levelId + 1
-                    level = Level.query.filter(Level.levelNo == nextLevel).first()
-                    return {'status': 'success', 'nextalias': level.name}, 200
-                else:
-                    return {'status': 'wrong answer', 'nextalias': None}, 400
-            elif user.levelId > level.levelNo:
-                ans = request.data['ans']
-                if ans == level.ans:
-                    user = Player.query.filter(Player.email == info['email']).first()
-                    nextlevelno = level.levelNo + 1
-                    level = Level.query.filter(Level.levelNo == nextlevelno).first()
-                    return {'status': 'success', 'nextalias': level.name}, 200
-                else:
-                    return {'status': 'wrong answer', 'nextalias': None}, 400
-            else:
-                return {'status': 'not accessible', 'nextalias': None}, 401
-        else:
-            return {'status': 'invalid access'}, 401
