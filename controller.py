@@ -15,6 +15,6 @@ class DatabaseHandler:
 
         engine = create_engine(config.sqlite['CREATE_ENGINE_URL'], echo=True)
         engine.raw_connection().connection.text_factory = lambda x: x.encode('utf-8', 'ignore')
-        session = scoped_session(sessionmaker(bind=engine))
+        session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=engine))
         DeclarativeBase.query = session.query_property()
         return session()

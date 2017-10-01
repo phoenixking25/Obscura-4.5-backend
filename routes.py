@@ -18,7 +18,6 @@ def leaderboard():
         info = Player.query.order_by(Player.levelId.desc()).all()
         if info:
             array = []
-            print info
             for player in info:
                 data = {'username':player.username, 'level':player.levelId, 'college':player.college}
                 array.append(data)
@@ -33,6 +32,7 @@ def signup():
     Create a new user
     '''
     if request.method == 'POST':
+        print request.data['phone']
         info = Player(request.data['name'], request.data['email'], request.data['username'], request.data['college'], request.data['phone'], request.data['level'], request.data['levelId'], request.data['picture'])
         casea = Player.query.filter(Player.email == request.data['email']).first()
         caseb = Player.query.filter(Player.username == request.data['username']).first()
@@ -128,12 +128,14 @@ def generatetoken():
         provider = request.data['provider']
         info = validate_token(token, provider)
         user = Player.query.filter(Player.email == info['email']).first()
+        print info['email']
+        print user
         if user:
             if info['email'] == user.email:
                 jwt = tokenGenerate(info['email'])
                 return {'backend':info['email'], 'token':jwt, 'status':'success', 'provider':provider}, 200
         else:
-            return {'backend':info['email'], 'status':'failure', 'name':info['name'], 'picture':info['picture'], 'provider': provider }, 401
+            return {'backend':info['email'], 'status':'failure', 'name':info['name'], 'picture':info['picture'], 'provider': provider }, 200
     return {'error':'token not recieved'}, 400
 
 @obscura.route('/crreateLevel/', methods = ['POST', 'GET', 'PATCH'])
@@ -148,3 +150,19 @@ def createLevel():
         return {'status':'created'}, 201
     return {'status':'enter level details'}, 200
 
+@obscura.route('/levelList/', methods = ['GET'])
+def levelList():
+    '''
+    Provides the Cleared Level List
+    '''
+    if request.headers['auth']:             
+        info = decoder()
+        user = Player.query.filter(Player.email == info['email']).first()
+        level = Level.query.filter(Level.levelNo <= user.levelId)
+        array = []
+        for clearedLevel in level:
+            data = {'name': clearedLevel.name, 'levelNo': clearedLevel.levelNo}
+            array.append(data)
+        return array, 200
+    else:
+        return {'status': 'invalid access'}, 401      
