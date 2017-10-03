@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash, \
 import config
 
 
-engine = create_engine(config.sqlite['CREATE_ENGINE_URL'], echo=True)
+engine = create_engine(config.mysql['CREATE_ENGINE_URL'], echo=True)
 DeclarativeBase = declarative_base(engine)
 metadata = DeclarativeBase.metadata
 
