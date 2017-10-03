@@ -80,22 +80,23 @@ def level(alias):
     '''
     get the alias from the url and return the level respectively
     '''
-    info  = decoder()
-    if info:
-        # user = Player.query.filter(Player.email == info['email']).first()   
-        # level = Level.query.filter(Level.name == alias).first()
-        user = session.query(Player).filter(Player.email == info['email']).first()
-        level = session.query(Level).filter(Level.name == alias).first()
-        session.close()  
-        if user.levelId >= level.levelNo:
-            if level:
-                return {'name': level.name, 'picture':level.picture, 'hint':level.hint, 'js':level.js, 'html':level.html}, 200
+    if request.method == 'GET':
+        info  = decoder()
+        if info:
+            # user = Player.query.filter(Player.email == info['email']).first()   
+            # level = Level.query.filter(Level.name == alias).first()
+            user = session.query(Player).filter(Player.email == info['email']).first()
+            level = session.query(Level).filter(Level.name == alias).first()
+            session.close()  
+            if user.levelId >= level.levelNo:
+                if level:
+                    return {'name': level.name, 'picture':level.picture, 'hint':level.hint, 'js':level.js, 'html':level.html}, 200
+                else:
+                    return {'status': 'failure', 'msg': 'Level Not created'}, 404
             else:
-                return {'status': 'Level Not Found'}, 404
+                return {'status': 'Player not allowed'}, 403
         else:
-            return {'status': 'Player not allowed'}, 403
-    else:
-        return {'status': 'invalid access'}, 401
+            return {'status': 'invalid access'}, 401
     
     if request.method == 'POST':
         info = decoder()
@@ -116,9 +117,12 @@ def level(alias):
                     # level = Level.query.filter(Level.levelNo == nextLevel).first()
                     level = session.query(Level).filter(Level.levelNo == nextLevel).first()
                     session.close()
-                    return {'status': 'success', 'nextalias': level.name}, 200
+                    if level:
+                        return {'status': 'success', 'nextalias': level.name}, 200
+                    else:
+                        return {'status': 'failure', 'msg': 'Level Not Created'}, 200
                 else:
-                    return {'status': 'wrong answer', 'nextalias': None}, 400
+                    return {'status': 'wrong answer', 'nextalias': None}, 200
             elif user.levelId > level.levelNo:
                 ans = request.data['ans']
                 if ans == level.ans:
@@ -128,7 +132,10 @@ def level(alias):
                     # level = Level.query.filter(Level.levelNo == nextlevelno).first()
                     level = session.query(Level).filter(Level.levelNo == nextlevelno).first()
                     session.close()
-                    return {'status': 'success', 'nextalias': level.name}, 200
+                    if level:
+                        return {'status': 'success', 'nextalias': level.name}, 200
+                    else:
+                        return {'status': 'failure', 'msg': 'Level Not Created'}, 200
                 else:
                     return {'status': 'wrong answer', 'nextalias': None}, 400
             else:

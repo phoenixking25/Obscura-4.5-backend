@@ -29,6 +29,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.pyc
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -48,6 +49,7 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+config_global.py
 *.cover
 .hypothesis/
 
