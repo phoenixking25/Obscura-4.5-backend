@@ -1,10 +1,13 @@
 from sqlalchemy import Column, UniqueConstraint, create_engine
-from sqlalchemy import Integer, ForeignKey, String, TypeDecorator, Unicode
+from sqlalchemy import Integer, ForeignKey, String, TypeDecorator, Unicode, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
+from werkzeug.security import generate_password_hash, \
+     check_password_hash
 
 import config
 
-engine = create_engine(config.sqlite['CREATE_ENGINE_URL'], echo=True)
+
+engine = create_engine(config.mysql['CREATE_ENGINE_URL'], echo=True)
 DeclarativeBase = declarative_base(engine)
 metadata = DeclarativeBase.metadata
 
@@ -15,7 +18,7 @@ class Player(DeclarativeBase):
     email = Column(String(200))
     username = Column(String(200))
     college = Column(String(200))
-    phone = Column(Integer)
+    phone = Column(String(200))
     level = Column(String(200))
     levelId = Column(Integer)
     picture = Column(String(200))

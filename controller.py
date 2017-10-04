@@ -13,7 +13,7 @@ class DatabaseHandler:
         Connect to our SQLite database and return a Session object
         """
 
-        engine = create_engine(config.sqlite['CREATE_ENGINE_URL'], echo=True)
+        engine = create_engine(config.mysql['CREATE_ENGINE_URL'], echo=True)
         engine.raw_connection().connection.text_factory = lambda x: x.encode('utf-8', 'ignore')
         session = scoped_session(sessionmaker(bind=engine))
         DeclarativeBase.query = session.query_property()
