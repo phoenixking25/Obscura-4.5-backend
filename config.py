@@ -8,3 +8,5 @@ mysql = {
     'CREATE_ENGINE_URL': global_file.database_url
 }
 JWT_SECRET = global_file.secret_key
+
+#mysql+pymysql://root:password@host/db_name

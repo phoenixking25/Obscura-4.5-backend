@@ -2,6 +2,7 @@ from flask import Blueprint, request
 from models import Player, Level
 from controller import DatabaseHandler
 from helper import validate_token, tokenGenerate, decoder
+import time
 
 obscura = Blueprint('obscura', __name__)
 database_handler = DatabaseHandler()
@@ -58,22 +59,25 @@ def getAlias():
     '''
     Return the alias of the level that is going to display in url
     '''
-    info = decoder()
-    if info:
-        # user = Player.query.filter(Player.email == info['email']).first()
-        # level = Level.query.filter(Level.levelNo == user.levelId).first()
-        user = session.query(Player).filter(Player.email == info['email']).first()
-        level = session.query(Level).filter(Level.levelNo == user.levelId).first()
-        session.close()
-        if not level:
-            return {'status':'Level not found', 'alias': ''}, 404
-        if user.levelId >= level.levelNo:
-            return {'status': 'success', 'alias': level.name}, 200
+    if (1507289400 - time.time() < 0):
+        info = decoder()
+        if info:
+            # user = Player.query.filter(Player.email == info['email']).first()
+            # level = Level.query.filter(Level.levelNo == user.levelId).first()
+            user = session.query(Player).filter(Player.email == info['email']).first()
+            level = session.query(Level).filter(Level.levelNo == user.levelId).first()
+            session.close()
+            if not level:
+                return {'status':'Level not found', 'alias': ''}, 404
+            if user.levelId >= level.levelNo:
+                return {'status': 'success', 'alias': level.name}, 200
+            else:
+                return {'status': 'Not Accessible for the player'}, 403
         else:
-            return {'status': 'Not Accessible for the player'}, 403
+            return {'status': 'invalid access'}, 401
     else:
-        return {'status': 'invalid access'}, 401
-
+        return {'status': 'failure', 'msg': 'Game has not started yet'}, 200
+    
 
 @obscura.route('/level/<alias>', methods = ['GET', 'POST'])
 def level(alias):
@@ -81,22 +85,25 @@ def level(alias):
     get the alias from the url and return the level respectively
     '''
     if request.method == 'GET':
-        info  = decoder()
-        if info:
-            # user = Player.query.filter(Player.email == info['email']).first()   
-            # level = Level.query.filter(Level.name == alias).first()
-            user = session.query(Player).filter(Player.email == info['email']).first()
-            level = session.query(Level).filter(Level.name == alias).first()
-            session.close()  
-            if user.levelId >= level.levelNo:
-                if level:
-                    return {'name': level.name, 'picture':level.picture, 'hint':level.hint, 'js':level.js, 'html':level.html}, 200
+        if (1507289400 - time.time() < 0):
+            info  = decoder()
+            if info:
+                # user = Player.query.filter(Player.email == info['email']).first()   
+                # level = Level.query.filter(Level.name == alias).first()
+                user = session.query(Player).filter(Player.email == info['email']).first()
+                level = session.query(Level).filter(Level.name == alias).first()
+                session.close()  
+                if user.levelId >= level.levelNo:
+                    if level:
+                        return {'name': level.name, 'picture':level.picture, 'hint':level.hint, 'js':level.js, 'html':level.html}, 200
+                    else:
+                        return {'status': 'failure', 'msg': 'Level Not created'}, 404
                 else:
-                    return {'status': 'failure', 'msg': 'Level Not created'}, 404
+                    return {'status': 'Player not allowed'}, 403
             else:
-                return {'status': 'Player not allowed'}, 403
+                return {'status': 'invalid access'}, 401
         else:
-            return {'status': 'invalid access'}, 401
+            return {'status': 'failure', 'msg': 'Game has not started yet'}, 200
     
     if request.method == 'POST':
         info = decoder()
@@ -190,9 +197,12 @@ def levelList():
         level = session.query(Level).filter(Level.levelNo <= user.levelId)
         session.close()
         array = []
-        for clearedLevel in level:
-            data = {'name': clearedLevel.name, 'levelNo': clearedLevel.levelNo}
-            array.append(data)
-        return array, 200
+        if (1507289400 - time.time() < 0):
+            for clearedLevel in level:
+                data = {'name': clearedLevel.name, 'levelNo': clearedLevel.levelNo}
+                array.append(data)
+            return array, 200
+        else:
+            return array, 200
     else:
-        return {'status': 'invalid access'}, 401      
+        return {'status': 'invalid access'}, 200      
