@@ -11,13 +11,21 @@ session = database_handler.connect_to_database()
 start_time = 1507293000
 # start_time = 1007289400
 
+cached = None
+prevTime = time.time()
+
 @obscura.route('/leaderboard/', methods = ['GET'])
 def leaderboard():
+    global cached
+    global prevTime
     '''
     Provides the player details for the leaderboard in a array
-    '''   
+    '''
     if request.headers['auth']:             
         # info = Player.query.order_by(Player.levelId.desc()).all()
+        curTime = time.time()
+        if(cached and curTime - prevTime < 7):
+            return cached
         info = session.query(Player).order_by(Player.levelId.desc()).all()
         session.close()
         if info:
@@ -25,6 +33,8 @@ def leaderboard():
             for player in info:
                 data = {'username':player.username, 'level':player.levelId, 'college':player.college}
                 array.append(data)
+            cached = array
+            prevTime = curTime
             return array, 200
         return {'status': 'No Player has joined'}, 404
     else:
