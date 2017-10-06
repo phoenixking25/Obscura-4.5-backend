@@ -41,3 +41,11 @@ def decoder():
     token = request.headers['auth']
     ans = jwt.decode(token, config.JWT_SECRET, algorithms=['HS256'])        
     return ans
+
+
+def check_ans(input, dbString):
+    valid = dbString.split(' ')
+    if input in valid:
+        return True
+    
+    return False

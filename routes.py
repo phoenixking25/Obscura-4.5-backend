@@ -1,14 +1,15 @@
 from flask import Blueprint, request
 from models import Player, Level
 from controller import DatabaseHandler
-from helper import validate_token, tokenGenerate, decoder
+from helper import validate_token, tokenGenerate, decoder, check_ans
 import time
 
 obscura = Blueprint('obscura', __name__)
 database_handler = DatabaseHandler()
 session = database_handler.connect_to_database()
 
-
+start_time = 1507293000
+# start_time = 1007289400
 
 @obscura.route('/leaderboard/', methods = ['GET'])
 def leaderboard():
@@ -59,7 +60,7 @@ def getAlias():
     '''
     Return the alias of the level that is going to display in url
     '''
-    if (time.time()-1507289400 < 0):
+    if (time.time()-start_time < 0):
         return {'status': 'failure', 'msg': 'Game has not started yet'}, 200
     info = decoder()
     if info:
@@ -77,7 +78,8 @@ def getAlias():
     else:
         return {'status': 'invalid access'}, 401
   
-    
+
+startInt = 1000
 
 @obscura.route('/level/<alias>', methods = ['GET', 'POST'])
 def level(alias):
@@ -85,7 +87,7 @@ def level(alias):
     get the alias from the url and return the level respectively
     '''
     if request.method == 'GET':
-        if (time.time() - 1507289400 < 0):
+        if (time.time() - start_time < 0):
             return {'status': 'failure', 'msg': 'Game has not started yet'}, 200
         info  = decoder()
         if info:
@@ -96,7 +98,7 @@ def level(alias):
             session.close()  
             if user.levelId >= level.levelNo:
                 if level:
-                    return {'name': level.name, 'picture':level.picture, 'hint':level.hint, 'js':level.js, 'html':level.html}, 200
+                    return {'d_name': level.d_name, 'name': level.name, 'picture':level.picture, 'hint':level.hint, 'js':level.js, 'html':level.html}, 200
                 else:
                     return {'status': 'failure', 'msg': 'Level Not created'}, 404
             else:
@@ -111,29 +113,36 @@ def level(alias):
         if info:
             # user = Player.query.filter(Player.email == info['email']).first()
             # level = Level.query.filter(Level.name == alias).first()
+            
             user = session.query(Player).filter(Player.email == info['email']).first()
             level = session.query(Level).filter(Level.name == alias).first()
+            correctMsg = "Right Ans! "
+            if(level.levelNo < 5):
+                correctMsg += str(1000 - 7 * level.levelNo)
+
+            print request.data['ans']
+            print level.ans
             if user.levelId == level.levelNo:
                 ans = request.data['ans']
-                if ans == level.ans:
+                if check_ans(ans,level.ans):
                     session.query(Player).filter(Player.email == info['email']).update({'levelId': user.levelId + 1})
                     session.commit()
                     session.close()
                     # user = Player.query.filter(Player.email == info['email']).first()
                     user = session.query(Player).filter(Player.email == info['email']).first()
-                    nextLevel = user.levelId + 1
+                    nextLevel = user.levelId
                     # level = Level.query.filter(Level.levelNo == nextLevel).first()
                     level = session.query(Level).filter(Level.levelNo == nextLevel).first()
                     session.close()
                     if level:
-                        return {'status': 'success', 'nextalias': level.name}, 200
+                        return {'status': 'success', 'nextalias': level.name, 'msg': correctMsg}, 200
                     else:
-                        return {'status': 'failure', 'msg': 'Level Not Created'}, 200
+                        return {'status': 'failure', 'msg': 'Right Ans & Next Level Not Created'}, 200
                 else:
-                    return {'status': 'wrong answer', 'nextalias': None}, 200
+                    return {'status': 'failure', 'msg': 'Wrong Ans' }, 200
             elif user.levelId > level.levelNo:
                 ans = request.data['ans']
-                if ans == level.ans:
+                if check_ans(ans,level.ans):
                     # user = Player.query.filter(Player.email == info['email']).first()
                     user = session.query(Player).filter(Player.email == info['email']).first()
                     nextlevelno = level.levelNo + 1
@@ -141,11 +150,11 @@ def level(alias):
                     level = session.query(Level).filter(Level.levelNo == nextlevelno).first()
                     session.close()
                     if level:
-                        return {'status': 'success', 'nextalias': level.name}, 200
+                        return {'status': 'success', 'nextalias': level.name, 'msg': correctMsg}, 200
                     else:
-                        return {'status': 'failure', 'msg': 'Level Not Created'}, 200
+                        return {'status': 'failure', 'msg': 'Right Ans & Next Level Not Created'}, 200
                 else:
-                    return {'status': 'wrong answer', 'nextalias': None}, 400
+                    return {'status': 'wrong answer', 'msg': 'Wrong Ans'}, 200
             else:
                 return {'status': 'not accessible', 'nextalias': None}, 401
         else:
@@ -198,7 +207,7 @@ def levelList():
         level = session.query(Level).filter(Level.levelNo <= user.levelId)
         session.close()
         array = []
-        if (time.time() - 1507289400 < 0):
+        if (time.time() - start_time < 0):
             return array, 200
 
         for clearedLevel in level:

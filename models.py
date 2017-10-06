@@ -42,12 +42,12 @@ class Level(DeclarativeBase):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100))
     levelNo = Column(Integer)
-    nextUrl = Column(String(150))
-    picture = Column(String(150))
+    d_name = Column(String(500))
+    picture = Column(String(500))
     html = Column(String(200))
-    js = Column(String(200))
-    hint = Column(String(150))
-    ans = Column(String(150))
+    js = Column(String(500))
+    hint = Column(String(500))
+    ans = Column(String(500))
     
 
     def __init__(self, name=None, levelNo=None, nextUrl=None, picture=None, html=None, js=None, hint=None, ans=None):
