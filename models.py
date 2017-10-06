@@ -22,6 +22,7 @@ class Player(DeclarativeBase):
     level = Column(String(200))
     levelId = Column(Integer)
     picture = Column(String(200))
+    time = Column(DateTime)
 
     def __init__(self, name=None, email=None, username=None, college=None, phone=None, level=None, levelId=None, picture=None):
         self.name = name 

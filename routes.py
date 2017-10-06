@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from models import Player, Level
 from controller import DatabaseHandler
 from helper import validate_token, tokenGenerate, decoder, check_ans
-import time
+import time, datetime
 
 obscura = Blueprint('obscura', __name__)
 database_handler = DatabaseHandler()
@@ -26,7 +26,7 @@ def leaderboard():
         curTime = time.time()
         if(cached and curTime - prevTime < 7):
             return cached
-        info = session.query(Player).order_by(Player.levelId.desc()).all()
+        info = session.query(Player).order_by(Player.levelId.desc(), Player.time.desc()).all()
         session.close()
         if info:
             array = []
@@ -136,7 +136,7 @@ def level(alias):
             if user.levelId == level.levelNo:
                 ans = request.data['ans']
                 if check_ans(ans,level.ans):
-                    session.query(Player).filter(Player.email == info['email']).update({'levelId': user.levelId + 1})
+                    session.query(Player).filter(Player.email == info['email']).update({'levelId': user.levelId + 1, 'time': time.strftime('%Y-%m-%d %H:%M:%S')})
                     session.commit()
                     session.close()
                     # user = Player.query.filter(Player.email == info['email']).first()
