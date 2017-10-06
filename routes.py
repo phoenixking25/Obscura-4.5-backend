@@ -26,7 +26,7 @@ def leaderboard():
         curTime = time.time()
         if(cached and curTime - prevTime < 7):
             return cached
-        info = session.query(Player).order_by(Player.levelId.desc(), Player.time.desc()).all()
+        info = session.query(Player).order_by(Player.levelId.desc(), Player.time.asc()).all()
         session.close()
         if info:
             array = []
