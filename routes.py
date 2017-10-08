@@ -80,6 +80,7 @@ def getAlias():
         user = session.query(Player).filter(Player.email == info['email']).first()
         level = session.query(Level).filter(Level.levelNo == user.levelId).first()
         session.close()
+        
         if not level:
             return {'status':'Level not found', 'alias': ''}, 404
         if user.levelId >= level.levelNo:
@@ -106,7 +107,15 @@ def level(alias):
             # level = Level.query.filter(Level.name == alias).first()
             user = session.query(Player).filter(Player.email == info['email']).first()
             level = session.query(Level).filter(Level.name == alias).first()
-            session.close()  
+            session.close()
+
+            if alias == 'aurevoi':
+                if user.level == '21':
+                    return {'d_name': level.d_name, 'name': level.name, 'picture':level.picture, 'hint':level.hint, 'js':level.js, 'html':level.html}, 200
+                else:
+                    return {'status': 'Player not allowed'}, 403
+
+
             if user.levelId >= level.levelNo:
                 if level:
                     return {'d_name': level.d_name, 'name': level.name, 'picture':level.picture, 'hint':level.hint, 'js':level.js, 'html':level.html}, 200
@@ -127,12 +136,37 @@ def level(alias):
             
             user = session.query(Player).filter(Player.email == info['email']).first()
             level = session.query(Level).filter(Level.name == alias).first()
+            session.close()
+            
+            if alias == '21a':
+                ans = request.data['ans']
+                if check_ans(ans,level.ans):
+                    session.query(Player).filter(Player.email == info['email']).update({'level': '21'})
+                    session.commit()
+                    session.close()
+                    return {'status': 'success', 'nextalias': 'aurevoi', 'msg': 'Right ans'}, 200
+                else:
+                    return {'status': 'failure', 'msg': 'Wrong ans'}, 200
+
+            if alias == 'aurevoi':
+                if user.level == '21':
+                    ans = request.data['ans']
+                    if check_ans(ans,level.ans):
+                        session.query(Player).filter(Player.email == info['email']).update({'levelId': 22, 'time': time.strftime('%Y-%m-%d %H:%M:%S')})
+                        session.commit()
+                        session.close()
+                        print user.levelId
+                        return {'status': 'success', 'nextalias': 'cleared', 'msg': 'Congratulations'}, 200
+                    else:
+                        return {'status': 'failure', 'msg': 'wrong ans'}, 200
+                else:
+                    return {'status': 'failure'}, 200
+
+            
             correctMsg = "Right Ans! "
             if(level.levelNo < 5):
                 correctMsg += str(1000 - 7 * level.levelNo)
 
-            print request.data['ans']
-            print level.ans
             if user.levelId == level.levelNo:
                 ans = request.data['ans']
                 if check_ans(ans,level.ans):
