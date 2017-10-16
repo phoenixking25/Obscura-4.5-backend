@@ -7,6 +7,7 @@ from flask_cors import CORS, cross_origin
 
 #author : anuj(phoenixking25)
 #obscura_version: 4.5
+#obscura 5 is coming
 
 app = FlaskAPI(__name__)
 CORS(app)
