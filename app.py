@@ -5,6 +5,8 @@ from flask_jwt import JWT, jwt_required, current_identity
 from werkzeug.security import safe_str_cmp
 from flask_cors import CORS, cross_origin
 
+#author : anuj(phoenixking25)
+
 app = FlaskAPI(__name__)
 CORS(app)
 
